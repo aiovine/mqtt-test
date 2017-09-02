@@ -1,31 +1,58 @@
 package supervisor;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SupervisorCallback implements MqttCallback {
     private MqttClient client;
+    private List<String> rooms;
 
     public SupervisorCallback(MqttClient client) {
         this.client = client;
+        this.rooms = new ArrayList<String>();
     }
 
     public void connectionLost(Throwable throwable) {
         System.out.println("Connection to MQTT broker lost!");
     }
 
-    public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
+    public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
         String message = new String(mqttMessage.getPayload());
         System.out.println("Message received:\n\t"+ message);
 
-        if (message.startsWith("//echo")) {
-            String response = "Repeated message: " + message.substring(6);
-            MqttMessage mqttResponse = new MqttMessage();
-            mqttResponse.setPayload(response.getBytes());
-            client.publish("iot_data", mqttResponse);
+        String response = "";
+        if (message.split("//")[0].equals("echo")) {
+            String repMessage = message.split("//")[1];
+            response = "Repeated message: " + message.split("//")[1];
+        } else if (message.split("//")[0].equals("createRoom")) {
+            String roomName = message.split("//")[1];
+            if (!rooms.contains(roomName)) {
+                createRoom(roomName);
+                response = "responseCreateRoom//" + roomName + "//true";
+                client.subscribe("roomName");
+            } else {
+                response = "responseCreateRoom//" + roomName + "//false";
+            }
+        } else if (message.split("//")[0].equals("joinRoom")) {
+            String roomName = message.split("//")[1];
+            if (rooms.contains(roomName)) {
+                response = "responseJoinRoom//" + roomName + "//true";
+            } else {
+                response = "responseJoinRoom//" + roomName + "//false";
+            }
+        } else {
+            return;
         }
+        MqttMessage mqttResponse = new MqttMessage();
+        mqttResponse.setPayload(response.getBytes());
+        client.publish(topic, mqttResponse);
+    }
+
+    public void createRoom(String roomName) throws MqttException {
+        rooms.add(roomName);
+        client.subscribe(roomName);
     }
 
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {

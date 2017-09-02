@@ -13,18 +13,14 @@ import java.util.Scanner;
 public class Client {
     public static void main(String[] args) throws MqttException {
         MqttClient client = new MqttClient("tcp://localhost:1883", MqttClient.generateClientId());
-        client.setCallback(new ClientCallback());
+        Controller c = new Controller(client);
+        client.setCallback(new ClientCallback(client, c));
         client.connect();
-        client.subscribe("iot_data");
+        client.subscribe("iot_data/" + client.getClientId());
         MqttMessage message = new MqttMessage();
         message.setPayload("Client is connected".getBytes());
-        client.publish("iot_data", message);
+        client.publish("iot_data/" + client.getClientId(), message);
 
-        while (true) {
-            String text = new Scanner(System.in).nextLine();
-            message = new MqttMessage();
-            message.setPayload(text.getBytes());
-            client.publish("iot_data", message);
-        }
+        ClientWriter cw = new ClientWriter(client, c);
     }
 }
