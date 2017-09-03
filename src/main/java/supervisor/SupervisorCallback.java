@@ -7,11 +7,12 @@ import java.util.List;
 
 public class SupervisorCallback implements MqttCallback {
     private MqttClient client;
-    private List<String> rooms;
+    private SupervisorController controller;
+
 
     public SupervisorCallback(MqttClient client) {
         this.client = client;
-        this.rooms = new ArrayList<String>();
+        this.controller = new SupervisorController(client);
     }
 
     public void connectionLost(Throwable throwable) {
@@ -21,46 +22,24 @@ public class SupervisorCallback implements MqttCallback {
     public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
         String message = new String(mqttMessage.getPayload());
         System.out.println("Message received:\n\t"+ message);
-        String responseTopic = "iot_data";
+        String responseTopic;
 
-        String response = "";
-        if (message.split("//")[0].equals("echo")) {
+        String[] topicSplit = topic.split("/");
+
+        if (topicSplit[0].equals("iot_data")) {
+            //Request
             String clientID = topic.split("/")[1];
+            String response = controller.handleRequest(clientID, message);
             responseTopic = "iot_data/" + clientID + "/response";
-            String repMessage = message.split("//")[1];
-            response = "Repeated message: " + message.split("//")[1];
-        } else if (message.split("//")[0].equals("createRoom")) {
-            String clientID = topic.split("/")[1];
-            responseTopic = "iot_data/" + clientID + "/response";
-            String roomName = message.split("//")[1];
-            if (!rooms.contains(roomName)) {
-                createRoom(roomName);
-                response = "responseCreateRoom//" + roomName + "//true";
-                client.subscribe("roomName");
-            } else {
-                response = "responseCreateRoom//" + roomName + "//false";
-            }
-        } else if (message.split("//")[0].equals("joinRoom")) {
-            String clientID = topic.split("/")[1];
-            responseTopic = "iot_data/" + clientID + "/response";
-            String roomName = message.split("//")[1];
-            if (rooms.contains(roomName)) {
-                response = "responseJoinRoom//" + roomName + "//true";
-            } else {
-                response = "responseJoinRoom//" + roomName + "//false";
-            }
+
+            MqttMessage mqttResponse = new MqttMessage();
+            mqttResponse.setPayload(response.getBytes());
+            client.publish(responseTopic, mqttResponse);
         } else {
             return;
         }
-        MqttMessage mqttResponse = new MqttMessage();
-        mqttResponse.setPayload(response.getBytes());
-        client.publish(responseTopic, mqttResponse);
     }
 
-    public void createRoom(String roomName) throws MqttException {
-        rooms.add(roomName);
-        client.subscribe(roomName);
-    }
 
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
         // not used in this example
