@@ -22,7 +22,7 @@ public class Controller {
         String result = responseText.split("//")[2];
         String roomName = responseText.split("//")[1];
         if (result.equals("true")) {
-            client.unsubscribe("iot_data/" + client.getClientId());
+            client.unsubscribe("iot_data/" + client.getClientId() + "/response");
             client.subscribe(roomName);
             currentRoom = roomName;
             System.out.println("Now connected to room " + roomName);

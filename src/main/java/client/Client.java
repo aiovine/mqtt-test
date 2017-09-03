@@ -16,7 +16,8 @@ public class Client {
         Controller c = new Controller(client);
         client.setCallback(new ClientCallback(client, c));
         client.connect();
-        client.subscribe("iot_data/" + client.getClientId());
+        client.subscribe("iot_data");
+        client.subscribe("iot_data/" + client.getClientId() + "/response");
         MqttMessage message = new MqttMessage();
         message.setPayload("Client is connected".getBytes());
         client.publish("iot_data/" + client.getClientId(), message);

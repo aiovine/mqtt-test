@@ -27,7 +27,7 @@ public class ClientWriter {
 
             String topic;
             if (controller.getCurrentRoom() == null) {
-                topic = "iot_data/" + client.getClientId();
+                topic = "iot_data/" + client.getClientId() + "/request";
             } else {
                 topic = controller.getCurrentRoom();
             }
