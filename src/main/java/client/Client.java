@@ -13,8 +13,10 @@ import java.util.Scanner;
 public class Client {
     public static void main(String[] args) throws MqttException {
         MqttClient client = new MqttClient("tcp://localhost:1883", MqttClient.generateClientId());
-        Controller c = new Controller(client);
-        client.setCallback(new ClientCallback(client, c));
+        RequestManager rm = new RequestManager();
+        Controller c = new Controller(client, rm);
+
+        client.setCallback(new ClientCallback(client, c, rm));
         client.connect();
         client.subscribe("iot_data");
         client.subscribe("iot_data/" + client.getClientId() + "/response");
@@ -22,6 +24,6 @@ public class Client {
         message.setPayload("Client is connected".getBytes());
         client.publish("iot_data/" + client.getClientId(), message);
 
-        ClientWriter cw = new ClientWriter(client, c);
+        ClientWriter cw = new ClientWriter(client, c, rm);
     }
 }

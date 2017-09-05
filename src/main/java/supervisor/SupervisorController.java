@@ -24,22 +24,22 @@ public class SupervisorController {
 
         if (message.split("//")[0].equals("echo")) {
             String repMessage = message.split("//")[1];
-            response = "Repeated message: " + message.split("//")[1];
+            response = "echo//Repeated message: " + message.split("//")[1];
         } else if (message.split("//")[0].equals("createRoom")) {
             String roomName = message.split("//")[1];
             if (!rooms.contains(roomName)) {
                 createRoom(roomName);
-                response = "responseCreateRoom//" + roomName + "//true";
+                response = "createRoom//" + roomName + "//true";
                 client.subscribe("roomName");
             } else {
-                response = "responseCreateRoom//" + roomName + "//false";
+                response = "createRoom//" + roomName + "//false";
             }
         } else if (message.split("//")[0].equals("joinRoom")) {
             String roomName = message.split("//")[1];
             if (rooms.contains(roomName)) {
-                response = "responseJoinRoom//" + roomName + "//true";
+                response = "joinRoom//" + roomName + "//true";
             } else {
-                response = "responseJoinRoom//" + roomName + "//false";
+                response = "joinRoom//" + roomName + "//false";
             }
         } else {
             return "";

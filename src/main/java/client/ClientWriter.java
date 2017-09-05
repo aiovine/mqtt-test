@@ -12,27 +12,19 @@ import java.util.Scanner;
 public class ClientWriter {
     private MqttClient client;
     private Controller controller;
+    private RequestManager requestManager;
 
-    public ClientWriter(MqttClient client, Controller controller) throws MqttException {
+    public ClientWriter(MqttClient client, Controller controller, RequestManager requestManager) throws MqttException {
         this.client = client;
         this.controller = controller;
+        this.requestManager = requestManager;
         run();
     }
 
     private void run() throws MqttException {
         while (true) {
             String text = new Scanner(System.in).nextLine();
-            MqttMessage message = new MqttMessage();
-            message.setPayload(text.getBytes());
-
-            String topic;
-            if (controller.getCurrentRoom() == null) {
-                topic = "iot_data/" + client.getClientId() + "/request";
-            } else {
-                topic = controller.getCurrentRoom();
-            }
-
-            client.publish(topic, message);
+            controller.sendRequest(text);
         }
     }
 }
