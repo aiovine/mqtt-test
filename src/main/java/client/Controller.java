@@ -47,7 +47,7 @@ public class Controller {
                 });
             } else if (messageSplit[0].equals("echo")) {
                 requestManager.request(messageSplit[0], new RequestManagerCallback() {
-                    public void onResponse(String message) throws MqttException {
+                    public void onResponse(String message) throws MqttException { 
                         System.out.println("Called echo callback");
                     }
                 });
